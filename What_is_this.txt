@@ -1,0 +1,24 @@
+Hey User, you might be surprised that you have a new directory! That's fine,
+don't worry. 
+You installed 'run' (github.com/liamvdv/run). It's the commandline tool that
+easily allows you to to run your scripts.
+In this directory, you will see a directory called "unix" or "windows", 
+depending on your operating system (the author of this software is fully aware
+that you are most likely running darwin or linux, yet he decided to use "unix" 
+as a way to refer to equivalent shells).
+
+The author cannot think of anything more you'd like to know, besides how to use 
+'run'. As a result, he decided to include a short help manual in this file, 
+in case you forgot it after installing 'run'.
+
+'run' runs from the command promt, which will be represented with a dollar sign
+($) in the following. Do not type it.
+
+First, initialise 'run'. Because you can see this file, you can probably skip 
+this. If any error occurs that reports a missing directory or file, try re-
+initialising 'run'.
+$ run -init
+
+Now you will see your platform specific folder, right next to this file.
+To add a shell script, just place it into that folder.
+// TODO explain how to add scripts and so own...
