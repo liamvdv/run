@@ -1,5 +1,5 @@
 # run
-Fed up with typing `./super/long/path/to/script/updateGo.sh`? Or do you suffer from not remembering where your script resides? Even worse, do you often hop between Linux and Windows (or use [wsl](https://docs.microsoft.com/en-us/windows/wsl/about)) and consistent script names and locations are impossible? Then `run` might be a good fit.
+Are you fed up with typing `./super/long/path/to/script/updateGo.sh`? Do you suffer from not remembering where your script resides? Or even worse, do you often hop between Linux and Windows (or use [wsl](https://docs.microsoft.com/en-us/windows/wsl/about)) and consistent script names and locations are impossible? Then `run` might be a good fit.
 
 `run` is a way to manage and execute scripts across platforms. (macOS, Linux and Windows)
 
@@ -97,9 +97,21 @@ Second, let's actually start installing.
 ```
 $   sudo ./setup.sh $(which go)
 ```
-3) Initialise the application.
+3) Initialise the application:
 ```
 $   run -init
 ```
 #### Windows
-The install script for Windows is in the making.
+The installion for Windows is easy if you have go version 1.16 or higher installed. If not, download [download](https://golang.org/dl/) it. Remember that the installation directory (for most people that will be `C:\Program Files\Go\bin`) must be in the PATH environment variable. Check that by typing 
+```
+$   go version
+```
+If you don't get a result, ask Google about your specific error message. Tip: Closing and reopening all terminals helps with the most common problem.
+
+Now to the actual installation:
+1) Download this repository.
+2) Open the folder in the file explorer and **run as administrator** `setup.bat` (not setup.sh!).
+3) Initialise the application:
+```
+$   run -init
+```
