@@ -221,25 +221,28 @@ func listCmd(scriptDp, indexFp string) error {
 
 func parseCmd(args []string, cmd *jsonCmd) (err error) {
 	var i int
-	switch l := len(args); true {
-	case l >= 2:
+	var ran = false
+	l := len(args)
+	if l >= 2 {
+		ran = true
 		cmd.Name = args[0]
 		cmd.Script, err = filepath.Abs(args[1])
-		fallthrough
-	case l >= 3:
+	}
+	if l >= 3 {
 		i, err = strconv.Atoi(args[2])
 		if err != nil {
 			return err
 		}
 		cmd.Meta.MinNumArgs = i
-		fallthrough
-	case l >= 4:
+	}
+	if l >= 4 {
 		i, err = strconv.Atoi(args[3])
 		if err != nil {
 			return err
 		}
 		cmd.Meta.MaxNumArgs = i
-	default:
+	}
+	if ran {
 		return fmt.Errorf("Wrong argument count passed.\n")
 	}
 	return nil
