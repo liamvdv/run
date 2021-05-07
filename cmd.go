@@ -38,7 +38,7 @@ func setUp(scriptDp, indexFp string) error {
 	}
 
 	platformDir := filepath.Dir(scriptDp)
-	whatIsThisFp := filepath.Join(platformDir, "What_is_this?")
+	whatIsThisFp := filepath.Join(platformDir, "What_is_this.txt")
 	switch _, err := os.Stat(whatIsThisFp); {
 	case err == nil:
 		return err

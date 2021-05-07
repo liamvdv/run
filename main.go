@@ -17,7 +17,6 @@ const (
 )
 
 func main() {
-	// Initialise globals
 	home, err := os.UserHomeDir()
 	if err != nil {
 		GracefulExit(err)
