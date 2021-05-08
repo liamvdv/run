@@ -40,7 +40,6 @@ go build -o %~dp0\run.exe %~dp0\main.go %~dp0\cmd.go
 :waittofinish
 timeout /t 1 /nobreak >nul 2>&1
 if exist "%RUN_DIRPATH%" (
-    echo Infinite
     if exist "%~dp0\run.exe" (
        goto cont
     )
@@ -61,5 +60,6 @@ if /I "%SETXPATH%" neq "y" goto end
 setx /M PATH "%PATH%;%RUN_DIRPATH%"
 
 :end
-echo Done.
+echo Testing installation (this might take a few seconds)...
 run -list
+echo Done.

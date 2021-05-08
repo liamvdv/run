@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -16,8 +17,17 @@ const (
 	INDEX_FILE string = "cmd_mappings.json"
 )
 
+var InternalCmds = []string{
+	"-init",
+	"-new",
+	"-mod",
+	"-del",
+	"-tidy",
+	"-list",
+}
+
 func main() {
-	home, err := os.UserHomeDir()
+	home, err := userHomeDir() // custom implementation to account for "sudo" command.
 	if err != nil {
 		GracefulExit(err)
 	}
@@ -139,21 +149,6 @@ type jsonCmd struct {
 	Meta   meta   `json:"options"`
 }
 
-func invalidArgsError(cmd *jsonCmd, argsLen int) error {
-	var s = "at least"
-	var n = cmd.Meta.MinNumArgs
-	var plural = "s"
-	if argsLen > cmd.Meta.MaxNumArgs {
-		s = "at most"
-		n = cmd.Meta.MinNumArgs
-	}
-	if n == 1 || n == -1 {
-		plural = ""
-	}
-
-	return fmt.Errorf("%q expects %s %d argument%s.", cmd.Name, s, n, plural)
-}
-
 /******************************************************************************/
 
 const MissingShebangErrorMsg = `You need to add a shebang to your script.
@@ -213,3 +208,42 @@ func getCommand(dirpath string, args []string, indexFp string) ([]string, error)
 }
 
 /******************************************************************************/
+
+// userHomeDir is essentially a copy of os.UserHomeDir, but it detects the user
+// who ran the script, not the one executing it. This is important, because
+// -tidy requires priviledges. Using sudo will result in $HOME equaling /root.
+// Thus, we need to check if sudo is used and act accordingly.
+func userHomeDir() (string, error) {
+	env, enverr := "HOME", "$HOME"
+	switch runtime.GOOS {
+	case "windows":
+		env, enverr = "USERPROFILE", "%userprofile%"
+	case "plan9":
+		env, enverr = "home", "$home"
+	// inserted case
+	case "linux", "darwin":
+		// if running as root
+		if os.Geteuid() == 0 {
+			// check if run with sudo
+			if usrname := os.Getenv("SUDO_USER"); usrname != "" {
+				if usr, err := user.Lookup(usrname); err == nil {
+					return usr.HomeDir, nil
+				} else {
+					return "", err
+				}
+			}
+		}
+	}
+
+	if v := os.Getenv(env); v != "" {
+		return v, nil
+	}
+	// On some geese the home directory is not always defined.
+	switch runtime.GOOS {
+	case "android":
+		return "/sdcard", nil
+	case "ios":
+		return "/", nil
+	}
+	return "", errors.New(enverr + " is not defined")
+}

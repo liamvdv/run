@@ -5,8 +5,7 @@ Are you fed up with typing `./super/long/path/to/script/updateGo.sh`? Do you suf
 
 ## What does run do?
 `run` is a place to store your shell scripts and associate names with them, which `run` calls `cmd` (command). It lets you easily call these commands and remembers, where the script resides. Moreover, `run` detects the platform it is run on, so that you can create different, platform-specific scripts with the same name.
-`run` also helps you to keep track of all your scripts (see [`-list` command](#-list)).
-
+`run` also helps you to keep track of all your scripts (see [`-list` command](#List all commands)).
 ## Usage
 If you haven't yet initialised the command:
 ```
@@ -75,12 +74,11 @@ Name       Location
 -tidy      internal
 -list      internal
 sher       /home/liamvdv/.run/cmd/unix/fetchOSINTInformation.sh
-```
-Quick Note: `-tidy` does not handle scripts with the same name currently. This will be corrected in future commits. 
+``` 
 ## Installation
 Currently, there is no pre-build version available. You need to have [go@1.16](https://golang.org/doc/go1.16) or higher installed to compile the application. 
 #### Linux
-First, let's check if go ist installed and if it's above version 1.16. Additionally, we need to know the installation path.
+First, let's check if go is installed and if it's above version 1.16. Additionally, we need to know the installation path.
 ```
 $   go version
 ```
@@ -93,8 +91,9 @@ This will add `export PATH=$PATH:/usr/local/go/bin` to your shell configuration,
 
 Second, let's actually start installing.
 1) Download this repository.
-2) Open the folder on the terminal and type the following command. `sudo` will ask your for root permissions if you aren't already root.
+2) Open the folder on the terminal and type the following commands. `sudo` will ask your for root permissions if you aren't already root.
 ```
+$   chmod +x ./setup.sh
 $   sudo ./setup.sh $(which go)
 ```
 3) Initialise the application:

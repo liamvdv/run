@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 // Do not remove. Functional comment. See https://golang.org/pkg/embed/
@@ -57,7 +58,7 @@ func setUp(scriptDp, indexFp string) error {
 
 var InvalidJsonErrTemplate = "Invalid JSON template: %s \n Please check cmd_mapping.json\n"
 var InvalidPathToScriptErr = fmt.Errorf("There is no such script in the provided directory.")
-var USAGE_NEW = "Usage:\n\run -new <name> <scriptPath> [<minArgsCount> <maxArgsCount>]"
+var USAGE_NEW = "Usage:\n\trun -new <name> <scriptPath> [<minArgsCount> <maxArgsCount>]"
 
 // createCmd only wants the args that are unspecific to the call of createCmd,
 // i. e. $ run -new make make.sh 2 3 will result in [make, make.sh, 2, 3].
@@ -69,7 +70,7 @@ func createCmd(indexFp string, args []string) error {
 		},
 	}
 	if err := parseCmd(args, &cmd); err != nil {
-		return err
+		return fmt.Errorf("%w%s", err, USAGE_NEW)
 	}
 
 	if _, err := os.Stat(cmd.Script); os.IsNotExist(err) {
@@ -177,11 +178,59 @@ func deleteCmd(indexFp string, args []string) error {
 
 /******************************************************************************/
 
+// TODO: Test this command!
+// TODO: Problem: renaming and thus moving files requires root. Running sudo
+// 		 changes the user to root, thus home = /root, which then accesses the
+//		 wrong path....
 func tidyCmd(scriptDp, indexFp string) error {
+	entries, err := os.ReadDir(scriptDp)
+	if err != nil {
+		return err
+	}
+
+	nameSet := make(map[string]struct{}, len(entries)+20)
+	for _, entry := range entries {
+		nameSet[entry.Name()] = struct{}{}
+	}
+
 	tidy := func(cmds *[]jsonCmd) error {
 		cmdss := *cmds
-		for i := range cmdss {
-			scriptName := filepath.Base(cmdss[i].Script)
+		for i, cmd := range cmdss {
+			scriptName := filepath.Base(cmd.Script)
+
+			// Tidy moves all scripts into a single directory. This has two
+			// effects:
+			// 1) Namespacing through abspath doesn't work anymore, we have to
+			//    activly prevent name collisions.
+			// 2) The IO should be reduced, i. e. the calls to os.Rename should
+			//    be limited. To do so check if script is already in the dir.
+			if _, exists := nameSet[scriptName]; exists {
+				// check if the script is already in the registry, then just ignore
+				if strings.HasPrefix(cmd.Script, scriptDp) {
+					continue
+				}
+				// search for fitting name
+				// Used pattern: name + ASC_NUM + ext; ASC_NUM begins at 1
+				// f. e. update.sh -> update1.sh
+				ext := filepath.Ext(scriptName)
+				n := 1
+				name := cmd.Script[:len(cmd.Script)-len(ext)]
+				fmt.Println(cmd.Script, " to ", name, ext)
+				pattern := name + "%d" + ext
+
+				var newName = fmt.Sprintf(pattern, n)
+				for {
+					if _, exist := nameSet[newName]; exist {
+						n++
+						newName = fmt.Sprintf(pattern, n)
+						continue
+					}
+					break
+				}
+				fmt.Printf("Renaming %s to %s because of name collision in registry.", scriptName, newName)
+				scriptName = newName
+			}
+
 			newPath := filepath.Join(scriptDp, scriptName)
 			if err := os.Rename(cmdss[i].Script, newPath); err != nil {
 				fmt.Printf("Failed to move %q to %q: %s\n", scriptName, newPath, err.Error())
@@ -203,8 +252,9 @@ func listCmd(scriptDp, indexFp string) error {
 
 	fmt.Println("run commands:")
 	fmt.Printf(templt, "Name", "Location")
-	fmt.Printf(intTemplt+intTemplt+intTemplt+intTemplt+intTemplt+intTemplt,
-		"-init", "-new", "-mod", "-del", "-tidy", "-list")
+	for _, cmd := range InternalCmds {
+		fmt.Printf(intTemplt, cmd)
+	}
 
 	print := func(cmds *[]jsonCmd) error {
 		cmdss := *cmds
@@ -242,8 +292,8 @@ func parseCmd(args []string, cmd *jsonCmd) (err error) {
 		}
 		cmd.Meta.MaxNumArgs = i
 	}
-	if ran {
-		return fmt.Errorf("Wrong argument count passed.\n")
+	if !ran {
+		return fmt.Errorf("Wrong argument count.\n")
 	}
 	return nil
 }
@@ -397,4 +447,19 @@ func updateIndex(indexFp string, fn func(cmds *[]jsonCmd) error) error {
 
 	_, err = file.Write(rawJson)
 	return err
+}
+
+func invalidArgsError(cmd *jsonCmd, argsLen int) error {
+	var s = "at least"
+	var n = cmd.Meta.MinNumArgs
+	var plural = "s"
+	if argsLen > cmd.Meta.MaxNumArgs {
+		s = "at most"
+		n = cmd.Meta.MaxNumArgs
+	}
+	if n == 1 || n == -1 {
+		plural = ""
+	}
+
+	return fmt.Errorf("%q expects %s %d argument%s.", cmd.Name, s, n, plural)
 }
