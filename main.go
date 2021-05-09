@@ -53,17 +53,17 @@ func Run(runArgs []string, scriptDp, indexFp string) (err error) {
 	// check for internal commands
 	switch runArgs[0] {
 	case "-init":
-		return setUp(scriptDp, indexFp)
+		return SetUp(scriptDp, indexFp)
 	case "-new":
-		return createCmd(indexFp, runArgs[1:])
+		return CreateCmd(indexFp, runArgs[1:])
 	case "-mod":
-		return modifyCmd(indexFp, runArgs[1:])
+		return ModifyCmd(indexFp, runArgs[1:])
 	case "-del":
-		return deleteCmd(indexFp, runArgs[1:])
+		return DeleteCmd(indexFp, runArgs[1:])
 	case "-tidy":
-		return tidyCmd(scriptDp, indexFp)
+		return TidyCmd(scriptDp, indexFp)
 	case "-list":
-		return listCmd(scriptDp, indexFp)
+		return ListCmd(scriptDp, indexFp)
 	}
 
 	// check for external commands
@@ -165,7 +165,7 @@ func getCommand(dirpath string, args []string, indexFp string) ([]string, error)
 	argsToScriptN := len(args) - 1
 
 	cmd := jsonCmd{}
-	err := findInIndex(indexFp, name, &cmd)
+	err := Find(indexFp, name, &cmd)
 	if err == nil {
 		checks := cmd.Meta
 		// -1 allows any number or args
